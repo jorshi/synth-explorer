@@ -107,10 +107,11 @@ class SynthBrowser {
 
     addData() {
         this.runAnimation = false;
-        this.data.getData(this.initializeData.bind(this));
+        this.toggle = 0
+        this.data.getData(this.updateGraph.bind(this));
     }
 
-    initializeData(data) {
+    updateGraph(data) {
         // Data returned from AJAX call
         this.filenames = data.filenames;
         this.features = data.umapwavenet22;
@@ -119,8 +120,16 @@ class SynthBrowser {
         let pointCloud = this.generatePointCloud();
         pointCloud.scale.set(10, 10, 1);
         pointCloud.position.set(0, 0, 0);
+        this.scene.clear();
         this.scene.add(pointCloud);
         this.pointCloud = [pointCloud];
+
+        const {
+            positions,
+            colors
+        } = SynthBrowser.generatePositionsFromData(this.features);
+        this.target = positions;
+        this.target_colors = colors;
 
         // Start animation
         this.interpolating = true;
@@ -147,6 +156,11 @@ class SynthBrowser {
             colors,
           } = SynthBrowser.generatePositionsFromData(this.features);
 
+          for (let i = 0; i < positions.length; i++)
+          {
+              positions[i] = 0.0;
+          }
+
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
           geometry.computeBoundingBox();
@@ -159,29 +173,30 @@ class SynthBrowser {
         if (this.runAnimation)
             requestAnimationFrame(this.animate.bind(this));
 
+        if (this.pointCloud.length === 0)
+            return;
+
         if (this.interpolating) {
-            this.pointCloud[0].geometry.attributes.position.needsUpdate = true;
-            let positions = this.pointCloud[0].geometry.attributes.position.array;
+            let positions = this.pointCloud[0].geometry.getAttribute("position");
             this.interpolatingAmount += this.interpolationSpeed;
 
             if (this.interpolatingAmount >= 1.0) {
                 this.interpolating = false;
-                for (let i = 0; i < positions.length; ++i) {
-                    positions[i] = this.target[i];
-                }
+                positions.set(this.target);
             } else {
-                for (let i = 0; i < positions.length; i += 3) {
-                    positions[i] = THREE.Math.lerp(positions[i], this.target[i], this.interpolatingAmount);
-                    positions[i + 1] = THREE.Math.lerp(positions[i + 1], this.target[i + 1], this.interpolatingAmount);
+                for (let i = 0; i < positions.count; i++) {
+                    positions.setX(i, THREE.Math.lerp(positions.getX(i), this.target[3 * i], this.interpolatingAmount));
+                    positions.setY(i, THREE.Math.lerp(positions.getY(i), this.target[3 * i + 1], this.interpolatingAmount));
                 }
             }
+            positions.needsUpdate = true;
+            this.pointCloud[0].geometry.computeBoundingSphere();
         }
 
         this.render();
     }
 
     render() {
-        console.log("rendering");
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
         for (let i = 0; i < this.spheres.length; i++) {
@@ -370,8 +385,9 @@ class SynthBrowser {
 
 class BrowserDropArea {
 
-    constructor(target) {
+    constructor(target, onDrop) {
         this.target = target
+        this.onDrop = onDrop;
     }
 
     allowDrop(event) {
@@ -383,28 +399,34 @@ class BrowserDropArea {
 
     drop(event) {
         event.preventDefault();
-        console.log(event.originalEvent.dataTransfer.getData(this.target.type));
+        let data = JSON.parse(event.originalEvent.dataTransfer.getData(this.target.type));
+        this.onDrop(data);
     }
 }
 
 
 class BrowserDragItem {
 
-    constructor(type, data) {
+    constructor(type, dragStart) {
         this.type = type;
+        this.dragStart = dragStart;
     }
 
     drag(event) {
-        event.originalEvent.dataTransfer.setData(this.type, {});
-        console.log(event.originalEvent.dataTransfer.getData(this.type));
+        let data = this.dragStart();
+        event.originalEvent.dataTransfer.setData(this.type, JSON.stringify(data));
     }
 }
 
 
 $(document).ready(function() {
     window.synthBrowser = new SynthBrowser();
-    let synthDrag = new BrowserDragItem("synth-drag");
-    let containerDrop = new BrowserDropArea(synthDrag);
+    let synthDrag = new BrowserDragItem("synth-drag", function() {
+        return {synth: "Synth1B1", num_samples: 100};
+    });
+    let containerDrop = new BrowserDropArea(synthDrag, function(data) {
+        window.synthBrowser.addData(data);
+    });
 
     $('.draggable-synth').on("dragstart", synthDrag.drag.bind(synthDrag));
     $('#container').on("dragover", containerDrop.allowDrop.bind(containerDrop));
