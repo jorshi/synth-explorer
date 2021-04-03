@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../sample_analysis/.idea/sample_analysis.iml" filepath="$PROJECT_DIR$/../sample_analysis/.idea/sample_analysis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/synth_browse.iml" filepath="$PROJECT_DIR$/.idea/synth_browse.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../umap_tsne_embedding_visualiser/.idea/umap_tsne_embedding_visualiser.iml" filepath="$PROJECT_DIR$/../umap_tsne_embedding_visualiser/.idea/umap_tsne_embedding_visualiser.iml" />
+    </modules>
+  </component>
+</project>

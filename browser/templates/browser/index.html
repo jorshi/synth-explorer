@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>UMAP VS TSNE</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			color: #ffffff;
+			background-color: #ffffff;
+			margin: 0px;
+			overflow: hidden;
+		}
+
+		#info {
+			position: absolute;
+			top: 0px;
+			width: 100%;
+			padding: 5px;
+			font-family: Monospace;
+			font-size: 13px;
+			text-align: center;
+			font-weight: bold;
+		}
+
+		a {
+			color: #fff;
+		}
+
+		#zoom-container {
+			position: absolute;
+			/* background: #ccc; */
+			border: 1px solid #ccc;
+			top: 0;
+			right: 0;
+			padding: 10px;
+		}
+	</style>
+
+	<!-- List items with avatar and action -->
+	<style>
+		.demo-list-control {
+			width: 230px;
+		}
+
+		.demo-list-radio {
+			display: inline;
+		}
+	</style>
+</head>
+
+<body>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-deep_orange.min.css" />
+	<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script> -->
+
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script src="//rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+	<script src="{% static 'browser/js/jquery-3.6.0.js' %}"></script>
+
+	<!-- The drawer is always open in large screens. The header is always shown,
+		  even in small screens. -->
+	<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
+            		mdl-layout--fixed-header">
+		<header class="mdl-layout__header">
+			<div id='header' class="mdl-layout__header-row">
+				<div class="mdl-layout-spacer"></div>
+				<nav class="mdl-navigation">
+					<h6 id="filename"></h6>
+				</nav>
+				<div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
+                                mdl-textfield--floating-label mdl-textfield--align-right">
+
+					<div class="mdl-textfield__expandable-holder">
+						<input class="mdl-textfield__input" type="text" name="sample" id="fixed-header-drawer-exp">
+					</div>
+				</div>
+			</div>
+		</header>
+		<div class="mdl-layout__drawer" id='drawer'>
+			<span class="mdl-layout-title">Audio Explorer</span>
+			<nav class="mdl-navigation">
+
+				<ul class="demo-list-control mdl-list">
+					<!-- <li class="mdl-list__item">
+						<span class="mdl-list__item-primary-content">
+							MFCC
+						</span>
+						<span class="mdl-list__item-secondary-action">
+							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="feature-list-option-1">
+								<input type="radio" id="feature-list-option-1" class="mdl-radio__button" name="options" value="mfcc"
+									oninput="updateGraph()" onchange="updateGraph()" checked />
+							</label>
+						</span>
+					</li> -->
+
+					<li class="mdl-list__item">
+						<span class="mdl-list__item-primary-content">
+							Wavenet
+						</span>
+						<span class="mdl-list__item-secondary-action">
+							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="feature-list-option-2">
+								<input type="radio" id="feature-list-option-2" class="mdl-radio__button" name="options" value="wavenet"
+									oninput="updateGraph()" onchange="updateGraph()" checked />
+							</label>
+						</span>
+					</li>
+				</ul>
+			</nav>
+
+			<hr>
+
+			<nav class="mdl-navigation">
+				<ul class="demo-list-control mdl-list">
+					<li class="mdl-list__item">
+						<span class="mdl-list__item-primary-content">
+							UMAP
+						</span>
+						<span class="mdl-list__item-secondary-action">
+							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="method-list-option-1">
+								<input type="radio" id="method-list-option-1" class="mdl-radio__button" name="methodoptions"
+									value="umap" oninput="updateGraph()" onchange="updateGraph()" checked />
+							</label>
+						</span>
+					</li>
+
+					<!-- <li class="mdl-list__item">
+						<span class="mdl-list__item-primary-content">
+							t-SNE
+						</span>
+						<span class="mdl-list__item-secondary-action">
+							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="method-list-option-2">
+								<input type="radio" id="method-list-option-2" class="mdl-radio__button" name="methodoptions"
+									value="tsne" oninput="updateGraph()" onchange="updateGraph()" />
+							</label>
+						</span>
+					</li>
+
+
+					<li class="mdl-list__item">
+						<span class="mdl-list__item-primary-content">
+							PCA
+						</span>
+						<span class="mdl-list__item-secondary-action">
+							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="method-list-option-3">
+								<input type="radio" id="method-list-option-3" class="mdl-radio__button" name="methodoptions" value="pca"
+									oninput="updateGraph()" onchange="updateGraph()" />
+							</label>
+						</span>
+					</li> -->
+				</ul>
+
+				<div id="sliders">
+					<div>
+						<div class="mdl-card__supporting-text">
+							<p id="slider-text-1">Zoom</p>
+						</div>
+						<input class="mdl-slider mdl-js-slider" type="range" id="slider-zoom" min="20" max="200" step="1" value="20"
+							oninput="updateZoom()" onchange="updateZoom()">
+					</div>
+					<p style="width:230px">
+					<div class="mdl-card__supporting-text">
+						<p id="slider-text-1">Neighbours</p>
+					</div>
+					<input class="mdl-slider mdl-js-slider" type="range" id="slider1" min="1" max="5" step="1"
+						oninput="updateGraph()" onchange="updateGraph()">
+					<div class="mdl-card__supporting-text">
+						<p id="slider-text-2">Distances</p>
+					</div>
+					<input class="mdl-slider mdl-js-slider" type="range" id="slider2" min="1" max="5" step="1"
+						oninput="updateGraph()" onchange="updateGraph()">
+					</p>
+				</div>
+			</nav>
+		</div>
+		<main class="mdl-layout__content">
+			<div class="page-content">
+				<!-- Your content goes here -->
+
+				<div id="container">
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<script>
+		window.panningSpeed = 0.01;
+	</script>
+
+	<script>
+		var d = '{{ data | safe }}';
+	</script>
+
+	<script src="{% static 'browser/colors.js' %}"></script>
+	<script src="{% static 'browser/js/synth-browse.js' %}"></script>
+	<!-- <script type="text/javascript" src="/ajax/get_data.json"></script> -->
+	<script src="{% static 'browser/webaudiox.js' %}"></script>
+	<!-- <script src="{% static 'browser/demo.js' %}"></script> -->
+
+</body>
+
+</html>
