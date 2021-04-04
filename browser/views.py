@@ -29,6 +29,12 @@ def get_data(request):
             'mfcc_dim2': mfcc_umap[i].dim_2,
             'spectral_dim1': spectral_umap[i].dim_1,
             'spectral_dim2': spectral_umap[i].dim_2,
+            'rms': spectral[i].rms,
+            'spectral_centroid': spectral[i].spectral_centroid,
+            'spectral_bandwidth': spectral[i].spectral_bandwidth,
+            'spectral_flatness': spectral[i].spectral_flatness,
+            'spectral_rolloff': spectral[i].spectral_rolloff,
+            'zcr': spectral[i].zcr
         })
         filenames.append(patch.path)
 
@@ -37,6 +43,12 @@ def get_data(request):
         'filenames': filenames,
         'feature_names': {
             "pitch": "Keyboard Note",
+            "rms": "RMS Amplitude",
+            "spectral_centroid": "Spectral Centroid",
+            'spectral_bandwidth': "Spectral Bandwidth",
+            'spectral_flatness': "Spectral Flatness",
+            'spectral_rolloff': "Spectral Rolloff",
+            'zcr': "Zero Crossing Rate",
             'mfcc_dim1': "MFCC-UMAP Dim 1",
             'mfcc_dim2': "MFCC-UMAP Dim 2",
             "spectral_dim1": "Spectral-UMAP Dim 1",

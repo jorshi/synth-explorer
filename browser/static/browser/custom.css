@@ -4,12 +4,12 @@ p {
 
 
 .demo-card-wide.mdl-card {
-    width: 90%;
+    width: 80%;
     min-height: unset;
     height: 40px;
     line-height: 40px;
     text-align: center;
-    margin: auto;
+    margin: auto auto 5px;
 }
 
 .inline-radio {
@@ -27,4 +27,91 @@ p {
 
 .mdl-layout-title.main-title {
     font-weight: 800;
+}
+
+#feature-proto {
+    visibility: hidden;
+}
+
+#drag-x-axis {
+    position:absolute;
+    bottom:0px;
+    left:25%;
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 50%;
+    height: 0px;
+    z-index: 2;
+    text-align: center;
+}
+
+.draggable-x-axis {
+    height: 100px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-style: solid;
+    border-color: #cccccc;
+}
+
+#drag-y-axis {
+    position:absolute;
+    top:10%;
+    left:0px;
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 0px;
+    height: 80%;
+    z-index: 2;
+    text-align: center;
+}
+
+.draggable-y-axis {
+    width: 150px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-style: solid;
+    border-color: #cccccc;
+}
+
+#drag-color {
+    position:absolute;
+    top:0px;
+    left:25%;
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 50%;
+    height: 0px;
+    z-index: 2;
+    text-align: center;
+}
+
+.draggable-color {
+    height: 100px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-style: solid;
+    border-color: #cccccc;
+}
+
+.draggable-inner {
+    height: 50%;
+    width: 100%;
+    top: 50%;
+    position: absolute;
+}
+
+.header-text {
+    padding: 0px 0px 0px 26px;
+}
+
+#slider-zoom::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  background: #232323; /* Green background */
+}
+
+#slider-zoom::-moz-range-thumb {
+  background: #232323; /* Green background */
+}
+
+.mdl-slider__background-lower {
+    background: #504f4f;
+}
+
+.mdl-slider__background-upper {
+    background: #504f4f;
 }

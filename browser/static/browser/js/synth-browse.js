@@ -43,6 +43,11 @@ class Visualizer {
 
         this.filenames = []
         this.features = []
+        this.dimensions = {
+            x: "mfcc_dim1",
+            y: "mfcc_dim2",
+            color: null
+        }
 
         // Determine render window size
         this.drawerWidth = $('#drawer').width();
@@ -72,12 +77,13 @@ class Visualizer {
         this.intersection = null;
 
         // For panning
+        this.panningSpeed = 0.01;
         this.isPanning = false;
         this.startX = null;
         this.startY = null;
 
         // Points & spheres
-        this.pointSize = 2;
+        this.pointSize = 0.5;
         this.pointCloud = [];
         this.spheres = [];
         this.spheresIndex = 0;
@@ -91,7 +97,7 @@ class Visualizer {
 
         // Create spheres which show interactions
         let sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        let sphereMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+        let sphereMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
 
         for (let i = 0; i < 40; i++) {
             let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -131,7 +137,7 @@ class Visualizer {
         }
 
         // Create points from features
-        let newPoints = this.generatePointCloud(data.features);
+        let newPoints = this.generatePointCloud(data.features, this.dimensions);
         newPoints.scale.set(10, 10, 1);
         newPoints.position.set(0, 0, 0);
         newPoints.name = 'sample-points';
@@ -185,23 +191,55 @@ class Visualizer {
         this.animate();
     }
 
-    generatePointCloud(data) {
-        let geometry = this.generatePointCloudGeometry(data);
+
+    updateAxis(axis, feature_id) {
+        let dim;
+        if (axis === 'x') {
+            dim = 0;
+            this.dimensions.x = feature_id;
+        } else {
+            dim = 1;
+            this.dimensions.y = feature_id;
+        }
+
+        for (let i = 0; i < this.features.length; i++) {
+            this.target[i * 3 + dim] = this.features[i][feature_id] - 0.5;
+        }
+
+        this.interpolating = true;
+        this.interpolatingAmount = 0
+    }
+
+    updateColors(feature_id) {
+        for (let i = 0; i < this.features.length; i++) {
+            let color = new THREE.Color();
+            color.setHSL(this.features[i][feature_id], 1.0, 0.6);
+            this.target_colors[i * 3] = color.r;
+            this.target_colors[i * 3 + 1] = color.g;
+            this.target_colors[i * 3 + 2] = color.b;
+        }
+        this.dimensions.color = feature_id;
+        this.interpolating = true;
+        this.interpolatingAmount = 0;
+    }
+
+    generatePointCloud(data, dimensions) {
+        let geometry = this.generatePointCloudGeometry(data, dimensions);
         let material = new THREE.PointsMaterial({
             size: this.pointSize,
             vertexColors: THREE.VertexColors,
-            sizeAttenuation: false
+            sizeAttenuation: true
         });
         let pointCloud = new THREE.Points(geometry, material);
         return pointCloud;
     }
 
-    generatePointCloudGeometry(data) {
+    generatePointCloudGeometry(data, dimensions) {
           let geometry = new THREE.BufferGeometry();
           const {
             positions,
             colors,
-          } = Visualizer.generatePositionsFromData(data);
+          } = Visualizer.generatePositionsFromData(data, dimensions);
 
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -210,31 +248,34 @@ class Visualizer {
           return geometry;
     }
 
-    static generatePositionsFromData(data) {
+    static generatePositionsFromData(data, dimensions) {
         let positions = new Float32Array(data.length * 3);
         let colors = new Float32Array(data.length * 3);
 
         for (let i = 0; i < data.length; ++i) {
-            let x = data[i]['coordinates'][0] - 0.5;
-            let y = data[i]['coordinates'][1] - 0.5;
+            let x = data[i][dimensions.x] - 0.5;
+            let y = data[i][dimensions.y] - 0.5;
             let z = 0;
 
             positions[3 * i] = x;
             positions[3 * i + 1] = y;
             positions[3 * i + 2] = z;
 
-            let r = 0;
-            let g = 0;
+            let r = 255;
+            let g = 255;
             let b = 0;
 
-            if (color_presets[i]) {
-                color_presets[i].r && (r = color_presets[i].r);
-                color_presets[i].g && (g = color_presets[i].g);
-                color_presets[i].b && (b = color_presets[i].b);
+            if (dimensions.color !== null) {
+                let color = new THREE.Color();
+                color.setHSL(data[i][dimensions.color], 1.0, 0.6);
+                r = color.r;
+                g = color.g;
+                b = color.b;
             }
-            colors[3 * i] = 255;
-            colors[3 * i + 1] = 255;
-            colors[3 * i + 2] = 0;
+
+            colors[3 * i] = r;
+            colors[3 * i + 1] = g;
+            colors[3 * i + 2] = b;
         }
 
         return {
@@ -252,18 +293,30 @@ class Visualizer {
 
         if (this.interpolating) {
             let positions = this.pointCloud[0].geometry.getAttribute("position");
+            let colors = this.pointCloud[0].geometry.getAttribute("color");
             this.interpolatingAmount += this.interpolationSpeed;
-
             if (this.interpolatingAmount >= 1.0) {
                 this.interpolating = false;
                 positions.set(this.target);
+                colors.set(this.target_colors);
             } else {
                 for (let i = 0; i < positions.count; i++) {
                     positions.setX(i, THREE.Math.lerp(positions.getX(i), this.target[3 * i], this.interpolatingAmount));
                     positions.setY(i, THREE.Math.lerp(positions.getY(i), this.target[3 * i + 1], this.interpolatingAmount));
                 }
+                for (let j = 0; j < colors.count; j++) {
+                    let color = new THREE.Color();
+                    color.setRGB(colors.array[j * 3], colors.array[j * 3 + 1], colors.array[j * 3 + 2]);
+                    let newColor = new THREE.Color();
+                    newColor.setRGB(this.target_colors[j * 3], this.target_colors[j * 3 + 1], this.target_colors[j * 3 + 2]);
+                    color.lerp(newColor, this.interpolatingAmount);
+                    colors.array[j * 3] = color.r;
+                    colors.array[j * 3 + 1] = color.g;
+                    colors.array[j * 3 + 2] = color.b;
+                }
             }
             positions.needsUpdate = true;
+            colors.needsUpdate = true;
             this.pointCloud[0].geometry.computeBoundingSphere();
         }
 
@@ -282,7 +335,7 @@ class Visualizer {
         let intersections = this.raycaster.intersectObjects(this.pointCloud);
         this.intersection = (intersections.length) > 0 ? intersections[0] : null;
         if (this.intersection) {
-            if (this.toggle > 0.05 && this.intersection !== null && this.mouseHasMoved) {
+            if (this.toggle > 0.1 && this.intersection !== null && this.mouseHasMoved) {
                 if (this.previousSampleIndex != this.intersection.index) {
                     let filepath = this.filenames[this.intersection.index % (this.filenames.length)];
                     this.previousSampleIndex = this.intersection.index;
@@ -294,13 +347,11 @@ class Visualizer {
 
                 let index = this.intersection.index;
                 this.spheres[this.spheresIndex].position.copy(this.intersection.point);
-                // try {
-                //     let mat = spheres[spheresIndex].material.clone();
-                //     mat.color.setRGB(color_presets[index].r, color_presets[index].g, color_presets[index].b);
-                //     spheres[spheresIndex].material = mat;
-                // } catch (_) {
-                //     console.log(_)
-                // }
+                let color = this.pointCloud[0].geometry.getAttribute("color");
+
+                let mat = this.spheres[this.spheresIndex].material.clone();
+                mat.color.setRGB(color.array[3 * index], color.array[3 * index + 1], color.array[3 * index + 2]);
+                this.spheres[this.spheresIndex].material = mat;
 
                 let scaleValue = 1;
                 scaleValue = 20 / parseInt(document.getElementById("slider-zoom").value);
@@ -321,6 +372,12 @@ class Visualizer {
     // ======================================================================
     // Handle User Interactions
     // ======================================================================
+    updateZoom() {
+        let z = parseInt(document.getElementById("slider-zoom").value);
+
+        // camera.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, 60 / z));
+        this.camera.position.z = 700 / z;
+    }
 
     onWindowResize() {
         this.renderWidth = window.innerWidth - this.drawerWidth;
@@ -359,8 +416,8 @@ class Visualizer {
 
                 this.startX = e.clientX;
                 this.startY = e.clientY;
-                this.camera.position.x = this.camera.position.x - dx * panningSpeed;
-                this.camera.position.y = this.camera.position.y + dy * panningSpeed;
+                this.camera.position.x = this.camera.position.x - dx * this.panningSpeed * (this.camera.position.z / 50.0);
+                this.camera.position.y = this.camera.position.y + dy * this.panningSpeed * (this.camera.position.z / 50.0);
             }
         }
     }
@@ -373,9 +430,9 @@ class Visualizer {
             e.stopPropagation();
             let step = 0;
             if (e.deltaY > 0) {
-                step = 1;
+                step = -5;
             } else {
-                step = -1;
+                step = 5;
             }
 
             let zoomControl = document.getElementById('slider-zoom');
@@ -460,6 +517,37 @@ class SynthBrowser {
         this.ajax = new Data();
         this.visualizer = new Visualizer(this.player);
         this.featureNames = {};
+
+        this.setup_feature_drop();
+    }
+
+    setup_feature_drop() {
+        let target = {type: "feature-drag"};
+
+        // Y-axis drop area
+        let featureDropY = new BrowserDropArea(target, (data) => {
+            this.visualizer.updateAxis('y', data.feature_id);
+        });
+        $('#drag-y-axis').hide();
+        $('#drag-y-axis').on("dragover", featureDropY.allowDrop.bind(featureDropY));
+        $('#drag-y-axis').on("drop", featureDropY.drop.bind(featureDropY));
+
+        // X-axis drop area
+        let featureDropX = new BrowserDropArea(target, (data) => {
+            this.visualizer.updateAxis('x', data.feature_id);
+        })
+        $('#drag-y-axis').hide();
+        $('#drag-x-axis').on("dragover", featureDropX.allowDrop.bind(featureDropX));
+        $('#drag-x-axis').on("drop", featureDropX.drop.bind(featureDropX));
+
+        // Colour drop area
+        // X-axis drop area
+        let featureDropColor = new BrowserDropArea(target, (data) => {
+            this.visualizer.updateColors(data.feature_id);
+        })
+        $('#drag-color').hide();
+        $('#drag-color').on("dragover", featureDropColor.allowDrop.bind(featureDropColor));
+        $('#drag-color').on("drop", featureDropColor.drop.bind(featureDropColor));
     }
 
     requestSamples(request) {
@@ -475,13 +563,51 @@ class SynthBrowser {
             ...this.featureNames,
             ...featureNames,
         };
+        let featureBlock = $('#feature-proto').hide();
+        let featureList = $('#feature-list');
 
+        // Update list of features
+        for (const [key, value] of Object.entries(this.featureNames)) {
+            if ($('#' + key).length === 0) {
+                let newFeatureBlock = featureBlock.clone(true);
+                newFeatureBlock.attr("id", key);
+                newFeatureBlock.text(value);
+                newFeatureBlock.show();
+                this.create_feature_drag(newFeatureBlock, key);
+                featureList.append(newFeatureBlock);
+            }
+        }
+        $('#feature-info').hide();
+    }
+
+    create_feature_drag(object, id) {
+        let featureDrag = new BrowserDragItem("feature-drag", () => {
+            // Show the area where this can be dropped
+            SynthBrowser.show_axis_drop();
+            return {feature_id: id};
+        });
+        object.on("dragstart", featureDrag.drag.bind(featureDrag));
+        object.on("dragend", SynthBrowser.hide_axis_drop);
+    }
+
+    static show_axis_drop() {
+        $('#drag-y-axis').addClass("draggable-y-axis").show();
+        $('#drag-x-axis').addClass("draggable-x-axis").show();
+        $('#drag-color').addClass("draggable-color").show();
+    }
+
+    static hide_axis_drop() {
+        $('#drag-y-axis').removeClass("draggable-y-axis").hide();
+        $('#drag-x-axis').removeClass("draggable-x-axis").hide();
+        $('#drag-color').removeClass("draggable-color").hide();
     }
 }
 
 
 $(document).ready(function() {
     window.synthBrowser = new SynthBrowser();
+
+    // Synth Samples Drag
     let synthDrag = new BrowserDragItem("synth-drag", function() {
         numSamples = $('#add-num-samples').val();
         return {synth: "Synth1B1", num_samples: numSamples};
@@ -490,7 +616,7 @@ $(document).ready(function() {
         window.synthBrowser.requestSamples(data);
     });
 
-    $('.draggable-synth').on("dragstart", synthDrag.drag.bind(synthDrag));
+    $('.synth-drag').on("dragstart", synthDrag.drag.bind(synthDrag));
     $('#container').on("dragover", containerDrop.allowDrop.bind(containerDrop));
     $('#container').on("drop", containerDrop.drop.bind(containerDrop));
 });

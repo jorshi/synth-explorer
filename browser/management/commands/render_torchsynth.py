@@ -77,6 +77,7 @@ class Command(BaseCommand):
         for i in tqdm(range(batch_idx, batch_idx + num_batches)):
             output = voice(i).detach().cpu().numpy()
             midi_f0 = voice.keyboard.p("midi_f0").detach().cpu().numpy()
+
             for j, sample in enumerate(output):
                 mfccs.append(librosa.feature.mfcc(sample, sr=sample_rate))
                 spectral_features = self.extract_spectral_features(sample, sample_rate)
@@ -94,7 +95,7 @@ class Command(BaseCommand):
                 sf.write(path, sample, voice.sample_rate.item())
 
                 new_patch.path = os.path.join(static("browser/audio"), f"{name}.ogg")
-                new_patch.pitch = midi_f0[j]
+                new_patch.pitch = midi_f0[j] / 127.0
                 new_patch.save()
                 patches.append(new_patch)
 

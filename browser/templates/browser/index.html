@@ -72,6 +72,15 @@
             		mdl-layout--fixed-header">
 		<header class="mdl-layout__header">
 			<div id='header' class="mdl-layout__header-row">
+				<div>
+					<div class="mdl-card__supporting-text header-text">
+						<p id="zoom-text">Zoom</p>
+					</div>
+					<p>
+						<input class="mdl-slider mdl-js-slider" type="range" id="slider-zoom" min="1" max="200" step="1" value="20"
+							oninput="window.synthBrowser.visualizer.updateZoom()" onchange="window.synthBrowser.visualizer.updateZoom()">
+					</p>
+				</div>
 				<div class="mdl-layout-spacer"></div>
 				<nav class="mdl-navigation">
 					<h6 id="filename"></h6>
@@ -116,11 +125,7 @@
 					<div class="mdl-card__supporting-text">
 						<p id="sample-pack-name">Nebulae (drag and drop)</p>
 					</div>
-					<div class="demo-card-wide mdl-card mdl-shadow--2dp draggable-synth" id="synth-1" draggable="true">
-						<div class="mdl-card__actions mdl-card--border">
-							Synth1B1
-						</div>
-					</div>
+					{% include "browser/drag_card.html" with type="synth-drag" id="synth-1" text="Synth1B1" %}
 				</div>
 				<!--
 				<div id="sliders">
@@ -137,7 +142,13 @@
 			<hr />
 			<nav class="mdl-navigation">
 				<div>
-					<span class="mdl-layout-title subtitle">Features</span>
+					<span class="mdl-layout-title subtitle">Select Features</span>
+				</div>
+				<div class="mdl-card__supporting-text">
+					<p>Feature list <span id="feature-info">(add sounds to see available features)</span></p>
+				</div>
+				{% include "browser/drag_card.html" with type="feature-drag" id="feature-proto" text="" %}
+				<div id="feature-list">
 				</div>
 			</nav>
 			<!--
@@ -238,6 +249,9 @@
 		</div>
 		<main class="mdl-layout__content">
 			<div class="page-content">
+				<div id="drag-color"><div class="draggable-inner">Colour</div></div>
+				<div id="drag-y-axis"><div class="draggable-inner">Y Axis</div></div>
+				<div id="drag-x-axis"><div class="draggable-inner">X Axis</div></div>
 				<!-- Your content goes here -->
 
 				<div id="container">
@@ -245,14 +259,6 @@
 			</div>
 		</main>
 	</div>
-
-	<script>
-		window.panningSpeed = 0.01;
-	</script>
-
-	<script>
-		var d = '{{ data | safe }}';
-	</script>
 
 	<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 	<script src="{% static 'browser/colors.js' %}"></script>
