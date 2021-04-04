@@ -1,15 +1,21 @@
 
 
 class Data {
-    getData(callback) {
+    getData(data, callback) {
         $.ajax({
-            url: "ajax/get_data.json"
+            url: "ajax/get_data.json",
+            data: data
         }).done(function (data) {
             callback(data);
         });
     }
 }
 
+// Audio Player Class
+
+// Visualizer
+
+// UserInteraction
 
 class SynthBrowser {
     constructor() {
@@ -32,7 +38,7 @@ class SynthBrowser {
         this.renderWidth = window.innerWidth - this.drawerWidth;
         this.renderHeight = window.innerHeight - this.titleHeight;
         let container = document.getElementById('container');
-        this.threshold = 0.1;
+        this.threshold = 0.05;
 
         // THREE initialization
         this.runAnimation = false;
@@ -66,8 +72,8 @@ class SynthBrowser {
         this.spheres = [];
         this.spheresIndex = 0;
 
-        this.target = null;
-        this.target_colors = null;
+        this.target = [];
+        this.target_colors = [];
 
         const near_plane = 2;
         const far_plane = 1000;
@@ -105,41 +111,80 @@ class SynthBrowser {
         this.registerPanEvents();
     }
 
-    addData() {
+    addData(data) {
         this.runAnimation = false;
-        this.toggle = 0
-        this.data.getData(this.updateGraph.bind(this));
+        this.data.getData(data, this.updateGraph.bind(this));
     }
 
-    updateGraph(data) {
+    updateGraph(data, add=true) {
         // Data returned from AJAX call
-        this.filenames = data.filenames;
-        this.features = data.umapwavenet22;
+        if (add) {
+            this.filenames.push(...data.filenames);
+            this.features.push(...data.features);
+        } else {
+            this.filenames = data.filenames;
+            this.features = data.features;
+        }
 
         // Create points from features
-        let pointCloud = this.generatePointCloud();
-        pointCloud.scale.set(10, 10, 1);
-        pointCloud.position.set(0, 0, 0);
-        this.scene.clear();
-        this.scene.add(pointCloud);
-        this.pointCloud = [pointCloud];
+        let newPoints = this.generatePointCloud(data.features);
+        newPoints.scale.set(10, 10, 1);
+        newPoints.position.set(0, 0, 0);
+        newPoints.name = 'sample-points';
 
-        const {
-            positions,
-            colors
-        } = SynthBrowser.generatePositionsFromData(this.features);
-        this.target = positions;
-        this.target_colors = colors;
+        // Add to targets
+        let positions = newPoints.geometry.getAttribute('position');
+        let colors = newPoints.geometry.getAttribute('color');
+        this.target.push(...positions.array);
+        this.target_colors.push(...colors.array);
+
+        // Update point cloud if it exists
+        if (this.pointCloud.length === 0) {
+            this.scene.add(newPoints);
+            this.pointCloud = [newPoints];
+        } else {
+            // Existing points
+            let pointCloud = this.pointCloud[0];
+            let geometry = this.pointCloud[0].geometry;
+            let pointsPositions = geometry.getAttribute('position');
+            let pointsColors = geometry.getAttribute('color');
+
+            // Create an updated point cloud
+            let updatedPoints = new Float32Array(pointsPositions.array.length + positions.array.length);
+            updatedPoints.fill(0.0);
+            updatedPoints.set(pointsPositions.array);
+            //updatedPoints.set(positions.array, pointsPositions.array.length);
+
+            let updatedColors = new Float32Array(updatedPoints.length);
+            updatedColors.fill(0);
+            updatedColors.set(pointsColors.array);
+            updatedColors.set(colors.array, pointsColors.array.length);
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(updatedPoints, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(updatedColors, 3));
+            geometry.getAttribute('position').needsUpdate = true;
+            geometry.needsUpdate = true;
+            geometry.computeBoundingSphere();
+
+            // Now remove the old scene
+            let oldPoints = this.scene.getObjectByName('sample-points');
+            this.scene.remove(oldPoints);
+            this.scene.add(pointCloud);
+            this.pointCloud = [pointCloud];
+        }
+
+        console.log(this.scene);
 
         // Start animation
         this.interpolating = true;
-        this.interpolatingAmount = 0;
+        this.interpolatingAmount = 0
         this.runAnimation = true;
+        this.toggle = 0;
         this.animate();
     }
 
-    generatePointCloud() {
-        let geometry = this.generatePointCloudGeometry();
+    generatePointCloud(data) {
+        let geometry = this.generatePointCloudGeometry(data);
         let material = new THREE.PointsMaterial({
             size: this.pointSize,
             vertexColors: THREE.VertexColors,
@@ -149,17 +194,17 @@ class SynthBrowser {
         return pointCloud;
     }
 
-    generatePointCloudGeometry() {
+    generatePointCloudGeometry(data) {
           let geometry = new THREE.BufferGeometry();
           const {
             positions,
             colors,
-          } = SynthBrowser.generatePositionsFromData(this.features);
+          } = SynthBrowser.generatePositionsFromData(data);
 
-          for (let i = 0; i < positions.length; i++)
-          {
-              positions[i] = 0.0;
-          }
+          // for (let i = 0; i < positions.length; i++)
+          // {
+          //     positions[i] = 0.0;
+          // }
 
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -208,7 +253,7 @@ class SynthBrowser {
         let intersections = this.raycaster.intersectObjects(this.pointCloud);
         this.intersection = (intersections.length) > 0 ? intersections[0] : null;
         if (this.intersection) {
-            if (this.toggle > 0.02 && this.intersection !== null && this.mouseHasMoved) {
+            if (this.toggle > 0.5 && this.intersection !== null && this.mouseHasMoved) {
                 if (this.previousSampleIndex != this.intersection.index) {
                     let filepath = this.filenames[this.intersection.index % (this.filenames.length)];
                     this.previousSampleIndex = this.intersection.index;
@@ -422,7 +467,8 @@ class BrowserDragItem {
 $(document).ready(function() {
     window.synthBrowser = new SynthBrowser();
     let synthDrag = new BrowserDragItem("synth-drag", function() {
-        return {synth: "Synth1B1", num_samples: 100};
+        numSamples = $('#add-num-samples').val();
+        return {synth: "Synth1B1", num_samples: numSamples};
     });
     let containerDrop = new BrowserDropArea(synthDrag, function(data) {
         window.synthBrowser.addData(data);

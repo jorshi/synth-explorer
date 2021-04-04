@@ -9,7 +9,9 @@ def index(request):
 
 
 def get_data(request):
-    features = UmapMFCC.objects.order_by('?')[:100]
+    synth = request.GET.get('synth', '')
+    num_samples = int(request.GET.get('num_samples', 0))
+    features = UmapMFCC.objects.order_by('?')[:num_samples]
     coordinates = []
     filenames = []
     for feature in features:
@@ -17,7 +19,7 @@ def get_data(request):
         filenames.append(feature.patch.path)
 
     data = {
-        'umapwavenet22': coordinates,
+        'features': coordinates,
         'filenames': filenames
     }
 

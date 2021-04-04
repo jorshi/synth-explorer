@@ -54,7 +54,8 @@
 <body>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.deep_purple-blue.min.css" />
-	<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
 	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script> -->
 
@@ -85,18 +86,51 @@
 			</div>
 		</header>
 		<div class="mdl-layout__drawer" id='drawer'>
-			<span class="mdl-layout-title">Audio Explorer</span>
+			<span class="mdl-layout-title">Synth Explorer</span>
+			<div id="add-samples-control">
+				<div>
+					<div class="mdl-card__supporting-text">
+						<p id="num-samples-text">Number of samples</p>
+					</div>
+					<input class="mdl-slider mdl-js-slider" type="range" id="add-num-samples"
+						   min="1" max="1000" step="1" value="100">
+				</div>
+				<div class="inline-radio">
+					<span class="mdl-card__supporting-text">
+						Random Sample
+					</span>
+					<span>
+						<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="random-sample">
+							<input type="radio" id="random-sample" class="mdl-radio__button" name="random-samples"
+								value="random-samples" checked />
+						</label>
+					</span>
+				</div>
+			</div>
 			<div class="selection-wrapper">
+				<div class="mdl-card__supporting-text">
+					<p id="sample-pack-name">Nebulae (drag and drop)</p>
+				</div>
 				<div class="demo-card-wide mdl-card mdl-shadow--2dp draggable-synth" id="synth-1" draggable="true">
 					<div class="mdl-card__actions mdl-card--border">
 						Synth1B1
 					</div>
 				</div>
 			</div>
+			<div id="sliders">
+				<div>
+					<div class="mdl-card__supporting-text">
+						<p id="slider-text-1">Zoom</p>
+					</div>
+					<input class="mdl-slider mdl-js-slider" type="range" id="slider-zoom" min="20" max="200" step="1" value="20"
+						oninput="updateZoom()" onchange="updateZoom()">
+				</div>
+			</div>
+			<!--
 			<nav class="mdl-navigation">
 
 				<ul class="demo-list-control mdl-list">
-					<!-- <li class="mdl-list__item">
+					<li class="mdl-list__item">
 						<span class="mdl-list__item-primary-content">
 							MFCC
 						</span>
@@ -106,7 +140,7 @@
 									oninput="updateGraph()" onchange="updateGraph()" checked />
 							</label>
 						</span>
-					</li> -->
+					</li>
 
 					<li class="mdl-list__item">
 						<span class="mdl-list__item-primary-content">
@@ -138,7 +172,7 @@
 						</span>
 					</li>
 
-					<!-- <li class="mdl-list__item">
+					<li class="mdl-list__item">
 						<span class="mdl-list__item-primary-content">
 							t-SNE
 						</span>
@@ -161,7 +195,7 @@
 									oninput="updateGraph()" onchange="updateGraph()" />
 							</label>
 						</span>
-					</li> -->
+					</li>
 				</ul>
 
 				<div id="sliders">
@@ -186,6 +220,7 @@
 					</p>
 				</div>
 			</nav>
+			-->
 		</div>
 		<main class="mdl-layout__content">
 			<div class="page-content">
@@ -205,6 +240,7 @@
 		var d = '{{ data | safe }}';
 	</script>
 
+	<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 	<script src="{% static 'browser/colors.js' %}"></script>
 	<script src="{% static 'browser/js/synth-browse.js' %}"></script>
 	<!-- <script type="text/javascript" src="/ajax/get_data.json"></script> -->
