@@ -120,12 +120,7 @@ class Visualizer {
         this.animate();
     }
 
-    addData(data) {
-        this.runAnimation = false;
-        this.ajax.getData(data, this.updateGraph.bind(this));
-    }
-
-    updateGraph(data, add=true) {
+    updateSamplePoints(data, add=true) {
         // Data returned from AJAX call
         if (add) {
             this.filenames.push(...data.filenames);
@@ -287,7 +282,7 @@ class Visualizer {
         let intersections = this.raycaster.intersectObjects(this.pointCloud);
         this.intersection = (intersections.length) > 0 ? intersections[0] : null;
         if (this.intersection) {
-            if (this.toggle > 0.5 && this.intersection !== null && this.mouseHasMoved) {
+            if (this.toggle > 0.05 && this.intersection !== null && this.mouseHasMoved) {
                 if (this.previousSampleIndex != this.intersection.index) {
                     let filepath = this.filenames[this.intersection.index % (this.filenames.length)];
                     this.previousSampleIndex = this.intersection.index;
@@ -453,10 +448,34 @@ class BrowserDragItem {
     }
 }
 
+/**
+ * SynthBrowser
+ *
+ * Main class for interacting with the sample data and visualizer
+ */
 class SynthBrowser {
+
     constructor() {
         this.player = new AudioPlayer();
+        this.ajax = new Data();
         this.visualizer = new Visualizer(this.player);
+        this.featureNames = {};
+    }
+
+    requestSamples(request) {
+        this.visualizer.runAnimation = false;
+        this.ajax.getData(request, function(data) {
+            this.updateFeatureList(data.feature_names);
+            this.visualizer.updateSamplePoints(data);
+        }.bind(this));
+    }
+
+    updateFeatureList(featureNames) {
+        this.featureNames = {
+            ...this.featureNames,
+            ...featureNames,
+        };
+
     }
 }
 
@@ -468,7 +487,7 @@ $(document).ready(function() {
         return {synth: "Synth1B1", num_samples: numSamples};
     });
     let containerDrop = new BrowserDropArea(synthDrag, function(data) {
-        window.synthBrowser.visualizer.addData(data);
+        window.synthBrowser.requestSamples(data);
     });
 
     $('.draggable-synth').on("dragstart", synthDrag.drag.bind(synthDrag));

@@ -12,6 +12,7 @@ class SynthPatch(models.Model):
     name = models.CharField(max_length=200, unique=True)
     synth = models.ForeignKey('Synth', on_delete=models.CASCADE)
     path = models.FilePathField(max_length=200)
+    pitch = models.FloatField(blank=True, null=True)
 
 
 class SpectralFeatures(models.Model):

@@ -15,3 +15,16 @@ p {
 .inline-radio {
     padding-top: 18px;
 }
+
+.mdl-layout-title.subtitle {
+    font-size: 16px;
+    text-align: center;
+}
+
+.mdl-layout__drawer>.mdl-layout-title {
+    line-height: 50px;
+}
+
+.mdl-layout-title.main-title {
+    font-weight: 800;
+}

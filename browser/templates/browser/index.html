@@ -86,46 +86,60 @@
 			</div>
 		</header>
 		<div class="mdl-layout__drawer" id='drawer'>
-			<span class="mdl-layout-title">Synth Explorer</span>
-			<div id="add-samples-control">
+			<span class="mdl-layout-title main-title">Synth Explorer</span>
+			<hr />
+			<nav class="mdl-navigation">
 				<div>
+					<span class="mdl-layout-title subtitle">Add Sounds</span>
+				</div>
+				<div id="add-samples-control">
+					<div>
+						<div class="mdl-card__supporting-text">
+							<p id="num-samples-text">Number of samples</p>
+						</div>
+						<input class="mdl-slider mdl-js-slider" type="range" id="add-num-samples"
+							   min="1" max="1000" step="1" value="100">
+					</div>
+					<div class="inline-radio">
+						<span class="mdl-card__supporting-text">
+							Random Sample
+						</span>
+						<span>
+							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="random-sample">
+								<input type="radio" id="random-sample" class="mdl-radio__button" name="random-samples"
+									value="random-samples" checked />
+							</label>
+						</span>
+					</div>
+				</div>
+				<div class="selection-wrapper">
 					<div class="mdl-card__supporting-text">
-						<p id="num-samples-text">Number of samples</p>
+						<p id="sample-pack-name">Nebulae (drag and drop)</p>
 					</div>
-					<input class="mdl-slider mdl-js-slider" type="range" id="add-num-samples"
-						   min="1" max="1000" step="1" value="100">
-				</div>
-				<div class="inline-radio">
-					<span class="mdl-card__supporting-text">
-						Random Sample
-					</span>
-					<span>
-						<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="random-sample">
-							<input type="radio" id="random-sample" class="mdl-radio__button" name="random-samples"
-								value="random-samples" checked />
-						</label>
-					</span>
-				</div>
-			</div>
-			<div class="selection-wrapper">
-				<div class="mdl-card__supporting-text">
-					<p id="sample-pack-name">Nebulae (drag and drop)</p>
-				</div>
-				<div class="demo-card-wide mdl-card mdl-shadow--2dp draggable-synth" id="synth-1" draggable="true">
-					<div class="mdl-card__actions mdl-card--border">
-						Synth1B1
+					<div class="demo-card-wide mdl-card mdl-shadow--2dp draggable-synth" id="synth-1" draggable="true">
+						<div class="mdl-card__actions mdl-card--border">
+							Synth1B1
+						</div>
 					</div>
 				</div>
-			</div>
-			<div id="sliders">
+				<!--
+				<div id="sliders">
+					<div>
+						<div class="mdl-card__supporting-text">
+							<p id="slider-text-1">Zoom</p>
+						</div>
+						<input class="mdl-slider mdl-js-slider" type="range" id="slider-zoom" min="20" max="200" step="1" value="20"
+							oninput="updateZoom()" onchange="updateZoom()">
+					</div>
+				</div>
+				-->
+			</nav>
+			<hr />
+			<nav class="mdl-navigation">
 				<div>
-					<div class="mdl-card__supporting-text">
-						<p id="slider-text-1">Zoom</p>
-					</div>
-					<input class="mdl-slider mdl-js-slider" type="range" id="slider-zoom" min="20" max="200" step="1" value="20"
-						oninput="updateZoom()" onchange="updateZoom()">
+					<span class="mdl-layout-title subtitle">Features</span>
 				</div>
-			</div>
+			</nav>
 			<!--
 			<nav class="mdl-navigation">
 
