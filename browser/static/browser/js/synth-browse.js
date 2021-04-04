@@ -12,87 +12,84 @@ class Data {
 }
 
 // Audio Player Class
-
-// Visualizer
-
-// UserInteraction
-
-class SynthBrowser {
+class AudioPlayer {
     constructor() {
-
-        // create WebAudio API context
+        // Setup for audio playback
         this.context = new AudioContext();
-
-        // Create lineOut
         this.lineOut = new WebAudiox.LineOut(this.context);
         this.lineOut.volume = 0.4;
-        this.currentAudioSource = null;
-        this.audioSources = [];
-        this.previousSampleIndex = -1;
+    }
+
+    playSound(file) {
+        WebAudiox.loadBuffer(this.context, file, function (buffer) {
+            // init AudioBufferSourceNode
+            let source = this.context.createBufferSource();
+            source.buffer = buffer
+            source.connect(this.lineOut.destination)
+
+            // start the sound now
+            source.start(0);
+        }.bind(this));
+    }
+}
+
+// Visualizer
+class Visualizer {
+
+    constructor(audioPlayer) {
+
+        this.player = audioPlayer;
+        this.ajax = new Data();
 
         this.filenames = []
         this.features = []
 
+        // Determine render window size
         this.drawerWidth = $('#drawer').width();
         this.titleHeight = $('#header').height();
         this.renderWidth = window.innerWidth - this.drawerWidth;
         this.renderHeight = window.innerHeight - this.titleHeight;
-        let container = document.getElementById('container');
-        this.threshold = 0.05;
 
         // THREE initialization
         this.runAnimation = false;
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
+        this.toggle = 0;
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        //this.renderer.setClearColor(0xffffff, 1);
         this.renderer.setSize(this.renderWidth, this.renderHeight);
+
+        // Add Renderer to the visualization container
+        let container = document.getElementById('container');
         container.appendChild(this.renderer.domElement);
 
+        // Raycaster for intersecting points
+        this.threshold = 0.05;
         this.raycaster = new THREE.Raycaster();
         this.raycaster.params.Points.threshold = this.threshold;
         this.mouse = new THREE.Vector2();
         this.mouseHasMoved = false;
         this.intersection = null;
-        this.toggle = 0;
 
         // For panning
         this.isPanning = false;
         this.startX = null;
         this.startY = null;
 
-        this.interpolating = false;
-        this.interpolatingAmount = 0;
-        this.interpolationSpeed = 0.01;
-
-        // Points
+        // Points & spheres
         this.pointSize = 2;
         this.pointCloud = [];
         this.spheres = [];
         this.spheresIndex = 0;
 
+        // For interpolation when adding new points
+        this.interpolating = false;
+        this.interpolatingAmount = 0;
+        this.interpolationSpeed = 0.01;
         this.target = [];
         this.target_colors = [];
 
-        const near_plane = 2;
-        const far_plane = 1000;
-
-        // Set up camera and scene
-        this.camera = new THREE.PerspectiveCamera(
-            20,
-            this.renderHeight / this.renderHeight,
-            near_plane,
-            far_plane
-        );
-
-        this.camera.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0, 35));
-
-        this.data = new Data();
-        this.init();
-    }
-
-    init() {
+        // Create spheres which show interactions
         let sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
         let sphereMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
 
@@ -102,18 +99,30 @@ class SynthBrowser {
             this.spheres.push(sphere);
         }
 
+        // Set up camera
+        const near_plane = 2;
+        const far_plane = 1000;
+        this.camera = new THREE.PerspectiveCamera(
+            20,
+            this.renderHeight / this.renderHeight,
+            near_plane,
+            far_plane
+        );
+        this.camera.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0, 35));
 
+        // Add event listeners
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
         document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
-
         this.onWindowResize();
-        this.animate();
         this.registerPanEvents();
+
+        // Start animation
+        this.animate();
     }
 
     addData(data) {
         this.runAnimation = false;
-        this.data.getData(data, this.updateGraph.bind(this));
+        this.ajax.getData(data, this.updateGraph.bind(this));
     }
 
     updateGraph(data, add=true) {
@@ -173,8 +182,6 @@ class SynthBrowser {
             this.pointCloud = [pointCloud];
         }
 
-        console.log(this.scene);
-
         // Start animation
         this.interpolating = true;
         this.interpolatingAmount = 0
@@ -199,12 +206,7 @@ class SynthBrowser {
           const {
             positions,
             colors,
-          } = SynthBrowser.generatePositionsFromData(data);
-
-          // for (let i = 0; i < positions.length; i++)
-          // {
-          //     positions[i] = 0.0;
-          // }
+          } = Visualizer.generatePositionsFromData(data);
 
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -213,8 +215,40 @@ class SynthBrowser {
           return geometry;
     }
 
-    animate() {
+    static generatePositionsFromData(data) {
+        let positions = new Float32Array(data.length * 3);
+        let colors = new Float32Array(data.length * 3);
 
+        for (let i = 0; i < data.length; ++i) {
+            let x = data[i]['coordinates'][0] - 0.5;
+            let y = data[i]['coordinates'][1] - 0.5;
+            let z = 0;
+
+            positions[3 * i] = x;
+            positions[3 * i + 1] = y;
+            positions[3 * i + 2] = z;
+
+            let r = 0;
+            let g = 0;
+            let b = 0;
+
+            if (color_presets[i]) {
+                color_presets[i].r && (r = color_presets[i].r);
+                color_presets[i].g && (g = color_presets[i].g);
+                color_presets[i].b && (b = color_presets[i].b);
+            }
+            colors[3 * i] = 255;
+            colors[3 * i + 1] = 255;
+            colors[3 * i + 2] = 0;
+        }
+
+        return {
+            positions,
+            colors
+        };
+    }
+
+    animate() {
         if (this.runAnimation)
             requestAnimationFrame(this.animate.bind(this));
 
@@ -257,21 +291,8 @@ class SynthBrowser {
                 if (this.previousSampleIndex != this.intersection.index) {
                     let filepath = this.filenames[this.intersection.index % (this.filenames.length)];
                     this.previousSampleIndex = this.intersection.index;
-
                     let file = filepath;
-
-                    WebAudiox.loadBuffer(this.context, file, function (buffer) {
-                        //stopAudio();
-
-                        // init AudioBufferSourceNode
-                        let source = this.context.createBufferSource();
-                        source.buffer = buffer
-                        source.connect(this.lineOut.destination)
-
-                        // start the sound now
-                        source.start(0);
-                        this.audioSources.push(source);
-                    }.bind(this));
+                    this.player.playSound(file);
 
                     document.getElementById("filename").innerHTML = filepath;
                 }
@@ -296,12 +317,15 @@ class SynthBrowser {
             }
         } else {
             this.previousSampleIndex = -1;
-            // stopAudio();
         }
 
         this.toggle += this.clock.getDelta();
         this.renderer.render(this.scene, this.camera);
     }
+
+    // ======================================================================
+    // Handle User Interactions
+    // ======================================================================
 
     onWindowResize() {
         this.renderWidth = window.innerWidth - this.drawerWidth;
@@ -391,40 +415,6 @@ class SynthBrowser {
             this.startY = null;
         }.bind(this));
     }
-
-    //==========================================
-    static generatePositionsFromData(data) {
-        let positions = new Float32Array(data.length * 3);
-        let colors = new Float32Array(data.length * 3);
-
-        for (let i = 0; i < data.length; ++i) {
-            let x = data[i]['coordinates'][0] - 0.5;
-            let y = data[i]['coordinates'][1] - 0.5;
-            let z = 0;
-
-            positions[3 * i] = x;
-            positions[3 * i + 1] = y;
-            positions[3 * i + 2] = z;
-
-            let r = 0;
-            let g = 0;
-            let b = 0;
-
-            if (color_presets[i]) {
-                color_presets[i].r && (r = color_presets[i].r);
-                color_presets[i].g && (g = color_presets[i].g);
-                color_presets[i].b && (b = color_presets[i].b);
-            }
-            colors[3 * i] = 255;
-            colors[3 * i + 1] = 255;
-            colors[3 * i + 2] = 0;
-        }
-
-        return {
-            positions,
-            colors
-        };
-    }
 }
 
 
@@ -463,6 +453,13 @@ class BrowserDragItem {
     }
 }
 
+class SynthBrowser {
+    constructor() {
+        this.player = new AudioPlayer();
+        this.visualizer = new Visualizer(this.player);
+    }
+}
+
 
 $(document).ready(function() {
     window.synthBrowser = new SynthBrowser();
@@ -471,7 +468,7 @@ $(document).ready(function() {
         return {synth: "Synth1B1", num_samples: numSamples};
     });
     let containerDrop = new BrowserDropArea(synthDrag, function(data) {
-        window.synthBrowser.addData(data);
+        window.synthBrowser.visualizer.addData(data);
     });
 
     $('.draggable-synth').on("dragstart", synthDrag.drag.bind(synthDrag));
