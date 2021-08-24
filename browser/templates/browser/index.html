@@ -83,7 +83,10 @@
 				</div>
 				<div class="mdl-layout-spacer"></div>
 				<nav class="mdl-navigation">
+				<nav class="mdl-navigation">
 					<h6 id="filename"></h6>
+					<span class="material-icons">folder</span>
+					<p id="num-files-saved"></p>
 				</nav>
 				<div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
                                 mdl-textfield--floating-label mdl-textfield--align-right">
@@ -94,36 +97,40 @@
 				</div>
 			</div>
 		</header>
-		<div class="mdl-layout__drawer" id='drawer'>
+		<div class="mdl-layout__drawer" id='drawer' scroll="console.log('here')">
 			<span class="mdl-layout-title main-title">Synth Explorer</span>
 			<hr />
 			<nav class="mdl-navigation">
 				<div>
-					<span class="mdl-layout-title subtitle">Add Sounds</span>
+					<span class="mdl-layout-title subtitle">1. Add Sounds</span>
+					<div class="mdl-card__supporting-text">
+						<p>Start by selecting the number of sounds you want to add, then drag and drop the synth onto the blank screen</p>
+					</div>
 				</div>
 				<div id="add-samples-control">
 					<div>
 						<div class="mdl-card__supporting-text">
-							<p id="num-samples-text">Number of samples</p>
+							<p id="num-samples-text">Number of samples to add:<p style="float:left;" id="num-sample-display">1<p><p style="float:right;">250</p></p>
 						</div>
 						<input class="mdl-slider mdl-js-slider" type="range" id="add-num-samples"
-							   min="1" max="1000" step="1" value="100">
+							   min="1" max="250" step="1" value="50">
 					</div>
-					<div class="inline-radio">
-						<span class="mdl-card__supporting-text">
-							Random Sample
-						</span>
-						<span>
-							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="random-sample">
-								<input type="radio" id="random-sample" class="mdl-radio__button" name="random-samples"
-									value="random-samples" checked />
-							</label>
-						</span>
-					</div>
+<!--					<div class="inline-radio">-->
+<!--						<span class="mdl-card__supporting-text">-->
+<!--							Random Sample-->
+<!--						</span>-->
+<!--						<span>-->
+<!--							<label class="demo-list-radio mdl-radio mdl-js-radio mdl-js-ripple-effect" for="random-sample">-->
+<!--								<input type="radio" id="random-sample" class="mdl-radio__button" name="random-samples"-->
+<!--									value="random-samples" checked />-->
+<!--							</label>-->
+<!--						</span>-->
+<!--					</div>-->
 				</div>
 				<div class="selection-wrapper">
 					<div class="mdl-card__supporting-text">
-						<p id="sample-pack-name">Nebulae (drag and drop)</p>
+						<p id="sample-pack-name"><b>Synth</b></p>
+						<p id="sample-pack-name">Drag and drop onto interface to add sounds</p>
 					</div>
 					{% include "browser/drag_card.html" with type="synth-drag" id="synth-1" text="Synth1B1" %}
 				</div>
@@ -142,10 +149,11 @@
 			<hr />
 			<nav class="mdl-navigation">
 				<div>
-					<span class="mdl-layout-title subtitle">Select Features</span>
+					<span class="mdl-layout-title subtitle">2. Select Features</span>
 				</div>
 				<div class="mdl-card__supporting-text">
-					<p>Feature list <span id="feature-info">(add sounds to see available features)</span></p>
+					<p id="drag-feature-info">Update the layout of the sound points by dragging and dropping any of the features below onto the screen.</p>
+					<p><span id="feature-info">(add sounds to see available features)</span></p>
 				</div>
 				{% include "browser/drag_card.html" with type="feature-drag" id="feature-proto" text="" %}
 				<div id="feature-list">
@@ -249,6 +257,7 @@
 		</div>
 		<main class="mdl-layout__content">
 			<div class="page-content">
+				<!-- {% include "browser/save-card.html" %} -->
 				<div id="drag-color"><div class="draggable-inner">Colour</div></div>
 				<div id="drag-y-axis"><div class="draggable-inner">Y Axis</div></div>
 				<div id="drag-x-axis"><div class="draggable-inner">X Axis</div></div>

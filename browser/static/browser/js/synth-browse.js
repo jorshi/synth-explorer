@@ -40,6 +40,7 @@ class Visualizer {
 
         this.player = audioPlayer;
         this.ajax = new Data();
+        this.lastIndex = null;
 
         this.filenames = []
         this.features = []
@@ -328,8 +329,11 @@ class Visualizer {
 
         for (let i = 0; i < this.spheres.length; i++) {
             let sphere = this.spheres[i];
-            sphere.scale.multiplyScalar(0.98);
-            sphere.scale.clampScalar(0.01, 1);
+            sphere.scale.multiplyScalar(0.99);
+            if (sphere.scale < 0.1) {
+                sphere.scale = 0.0;
+            }
+            //sphere.scale.clampScalar(0.001, 1);
         }
 
         let intersections = this.raycaster.intersectObjects(this.pointCloud);
@@ -339,6 +343,8 @@ class Visualizer {
                 if (this.previousSampleIndex != this.intersection.index) {
                     let filepath = this.filenames[this.intersection.index % (this.filenames.length)];
                     this.previousSampleIndex = this.intersection.index;
+                    this.lastIndex = this.intersection.index;
+
                     let file = filepath;
                     this.player.playSound(file);
 
@@ -519,6 +525,9 @@ class SynthBrowser {
         this.featureNames = {};
 
         this.setup_feature_drop();
+        this.setupKeyboard();
+
+        this.savedIndices = new Set();
     }
 
     setup_feature_drop() {
@@ -553,12 +562,12 @@ class SynthBrowser {
     requestSamples(request) {
         this.visualizer.runAnimation = false;
         this.ajax.getData(request, function(data) {
-            this.updateFeatureList(data.feature_names);
+            this.updateFeatureList(data.feature_names, data.feature_desc);
             this.visualizer.updateSamplePoints(data);
         }.bind(this));
     }
 
-    updateFeatureList(featureNames) {
+    updateFeatureList(featureNames, tooltips) {
         this.featureNames = {
             ...this.featureNames,
             ...featureNames,
@@ -569,15 +578,20 @@ class SynthBrowser {
         // Update list of features
         for (const [key, value] of Object.entries(this.featureNames)) {
             if ($('#' + key).length === 0) {
+                let container = $("<md-container style=\"overflow:visible\"></md-container>");
                 let newFeatureBlock = featureBlock.clone(true);
                 newFeatureBlock.attr("id", key);
                 newFeatureBlock.text(value);
                 newFeatureBlock.show();
                 this.create_feature_drag(newFeatureBlock, key);
-                featureList.append(newFeatureBlock);
+                container.append(newFeatureBlock);
+                container.append("<div class=\"mdl-tooltip\" for=\"" + key + "\">" + tooltips[key] + "</div>");
+                featureList.append(container);
             }
         }
         $('#feature-info').hide();
+        $('#drag-feature-info').show();
+        componentHandler.upgradeDom();
     }
 
     create_feature_drag(object, id) {
@@ -601,11 +615,23 @@ class SynthBrowser {
         $('#drag-x-axis').removeClass("draggable-x-axis").hide();
         $('#drag-color').removeClass("draggable-color").hide();
     }
+
+    // Save
+    setupKeyboard() {
+        document.addEventListener('keydown', function(event) {
+            if (event.code == 'KeyS') {
+                this.savedIndices.add(this.visualizer.lastIndex);
+                $('#num-files-saved').text(this.savedIndices.size);
+            }
+            console.log(event.code);
+        }.bind(this));
+    }
 }
 
 
 $(document).ready(function() {
     window.synthBrowser = new SynthBrowser();
+    $('#drag-feature-info').hide();
 
     // Synth Samples Drag
     let synthDrag = new BrowserDragItem("synth-drag", function() {
@@ -619,4 +645,6 @@ $(document).ready(function() {
     $('.synth-drag').on("dragstart", synthDrag.drag.bind(synthDrag));
     $('#container').on("dragover", containerDrop.allowDrop.bind(containerDrop));
     $('#container').on("drop", containerDrop.drop.bind(containerDrop));
+
+
 });

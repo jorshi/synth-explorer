@@ -24,6 +24,7 @@ SECRET_KEY = '#od&^#y2%ef)5nh56_%bjnmf+0v@!^o$t&u-*qiwk$4s&+85s)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+MYSQL = False
 
 ALLOWED_HOSTS = []
 
@@ -80,16 +81,24 @@ WSGI_APPLICATION = 'synth_browse.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'synth_browse',
-        'USER': 'synth_user',
-        'PASSWORD': '123456789',
-        'HOST': 'localhost',
-        'PORT': '',
+if MYSQL:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'synth_browse',
+            'USER': 'synth_user',
+            'PASSWORD': '123456789',
+            'HOST': 'localhost',
+            'PORT': '',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'db.synth_browse',
+        }
+    }
 
 
 # Password validation

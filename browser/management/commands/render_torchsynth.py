@@ -6,8 +6,7 @@ into the database model
 import os
 
 import torch
-import torch.tensor as T
-from torchsynth.globals import SynthGlobals
+from torch import tensor as T
 from torchsynth.synth import Voice
 from tqdm import tqdm
 import librosa
@@ -53,9 +52,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        synthglobals = SynthGlobals(batch_size=T(64))
-        sample_rate = synthglobals.sample_rate.item()
-        voice = Voice(synthglobals).to(device)
+        voice = Voice().to(device)
+        sample_rate = int(voice.sample_rate)
+        print(sample_rate)
 
         batch_idx = options['start_batch'][0]
         num_batches = options['num_batches'][0]
@@ -75,7 +74,8 @@ class Command(BaseCommand):
             synth.save()
 
         for i in tqdm(range(batch_idx, batch_idx + num_batches)):
-            output = voice(i).detach().cpu().numpy()
+            output, params, is_train = voice(i)
+            output = output.detach().cpu().numpy()
             midi_f0 = voice.keyboard.p("midi_f0").detach().cpu().numpy()
 
             for j, sample in enumerate(output):
@@ -92,7 +92,7 @@ class Command(BaseCommand):
 
                 # Save patch audio
                 path = os.path.join(audio_root, f"{name}.ogg")
-                sf.write(path, sample, voice.sample_rate.item())
+                sf.write(path, sample, int(voice.sample_rate.item()))
 
                 new_patch.path = os.path.join(static("browser/audio"), f"{name}.ogg")
                 new_patch.pitch = midi_f0[j] / 127.0

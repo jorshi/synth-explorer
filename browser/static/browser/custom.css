@@ -115,3 +115,19 @@ p {
 .mdl-slider__background-upper {
     background: #504f4f;
 }
+
+#saved-patches {
+    position:absolute;
+    top:0px;
+    right:25px;
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 200px;
+    height: 100px;
+    z-index: 2;
+    text-align: center;
+}
+
+#filename {
+    margin: 16px;
+    padding-right: 41px;
+}

@@ -53,6 +53,19 @@ def get_data(request):
             'mfcc_dim2': "MFCC-UMAP Dim 2",
             "spectral_dim1": "Spectral-UMAP Dim 1",
             "spectral_dim2": "Spectral-UMAP Dim 2",
+        },
+        'feature_desc': {
+            "pitch": "Note played on synthesizer",
+            "rms": "Measurement of loudness",
+            "spectral_centroid": "Brightness of a sound",
+            'spectral_bandwidth': "How many different frequencies a sound is composed of",
+            'spectral_flatness': "Higher values indicate a noisier sound",
+            'spectral_rolloff': "Higher values indicate more high frequency present",
+            'zcr': "The rate that a a sound crosses the zero point -- associated with the frequency of a sound",
+            'mfcc_dim1': "First dimension of a composite embedding based on 13 mel frequency cepstral coefficients",
+            'mfcc_dim2': "Second dimension of a composite embedding based on 13 mel frequency cepstral coefficients",
+            "spectral_dim1": "First dimension of a composite embedding based on a set of spectral features",
+            "spectral_dim2": "Second dimension of a composite embedding based on a set of spectral features2",
         }
     }
 
