@@ -4,6 +4,7 @@ structure SamplePack/kit_xx/kick/sample.wav
 into the database model
 """
 import os
+from pathlib import Path
 
 import torch
 from torch import tensor as T
@@ -42,11 +43,11 @@ class Command(BaseCommand):
 
         return np.array([
             rms.mean(),
-            centroid.mean(),
-            bandwidth.mean(),
-            flatness.mean(),
-            rolloff.mean(),
-            zcr.mean()
+            np.average(centroid, weights=rms),
+            np.average(bandwidth, weights=rms),
+            np.average(flatness, weights=rms),
+            np.average(rolloff, weights=rms),
+            np.average(zcr, weights=rms),
         ])
 
     def handle(self, *args, **options):
@@ -64,7 +65,8 @@ class Command(BaseCommand):
         spectral = []
 
         patches = []
-        audio_root = os.path.abspath(options['audio_folder'][0])
+        audio_root = Path(options['audio_folder'][0])
+        audio_root.mkdir(parents=True, exist_ok=True)
 
         # Check for Synth1B1 - make it if it doesn't exist
         try:
@@ -78,7 +80,7 @@ class Command(BaseCommand):
             output = output.detach().cpu().numpy()
             midi_f0 = voice.keyboard.p("midi_f0").detach().cpu().numpy()
 
-            for j, sample in enumerate(output):
+            for j, sample in enumerate(tqdm(output)):
                 mfccs.append(librosa.feature.mfcc(sample, sr=sample_rate))
                 spectral_features = self.extract_spectral_features(sample, sample_rate)
                 spectral.append(spectral_features)
