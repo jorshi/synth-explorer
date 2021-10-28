@@ -26,7 +26,9 @@ SECRET_KEY = '#od&^#y2%ef)5nh56_%bjnmf+0v@!^o$t&u-*qiwk$4s&+85s)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-MYSQL = False
+
+AVAILABLE_DATABASES = ["sqlite", "mysql", "postgres"]
+DATABASE = AVAILABLE_DATABASES[2]
 
 ALLOWED_HOSTS = []
 
@@ -83,7 +85,7 @@ WSGI_APPLICATION = 'synth_browse.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-if MYSQL:
+if DATABASE == "mysql":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -94,11 +96,18 @@ if MYSQL:
             'PORT': '',
         }
     }
-else:
+elif DATABASE == "sqlite":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': 'db.synth_browse',
+        }
+    }
+elif DATABASE == "postgres":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'synth_browse',
         }
     }
 
