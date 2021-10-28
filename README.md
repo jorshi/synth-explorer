@@ -1,6 +1,10 @@
 
 
 ## Heroku
+See [heroku django](https://devcenter.heroku.com/articles/getting-started-with-python) tutorial.
+
+Some useful commands once setup:
+
 To get heroku app info: `heroku info`
 
 Run locally:
@@ -21,3 +25,4 @@ Deploying a local database to production:
 - Uses the command [pg:push](https://devcenter.heroku.com/articles/heroku-postgresql#pg-push)
 - `heroku pg:push synth_browse DATEBASE_URL --app appname`
 
+### Deploying
