@@ -1,0 +1,1 @@
+web: gunicorn synth_browse.wsgi

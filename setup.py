@@ -20,6 +20,8 @@ setup(
     install_requires=[
         "django",
         "mysqlclient",
+        "gunicorn",
+        "django-heroku",
     ],
     extras_require={
         "test": [
