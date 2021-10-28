@@ -26,3 +26,6 @@ Deploying a local database to production:
 - `heroku pg:push synth_browse DATEBASE_URL --app appname`
 
 ### Deploying
+```
+git push heroku main
+```
