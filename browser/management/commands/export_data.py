@@ -3,6 +3,7 @@ Script for loading samples contained in a folder
 structure SamplePack/kit_xx/kick/sample.wav
 into the database model
 """
+import os
 import json
 
 from django.core.management.base import BaseCommand
@@ -42,7 +43,7 @@ class Command(BaseCommand):
                 'spectral_rolloff': spectral[i].spectral_rolloff,
                 'zcr': spectral[i].zcr
             })
-            filenames.append(patch.path[1:])
+            filenames.append(os.path.join("/browser", patch.path[1:]))
 
         data = {
             'features': features,
