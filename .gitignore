@@ -139,7 +139,7 @@ dmypy.json
 cython_debug/
 
 # Audio
-*.ogg
+# *.ogg
 
 # PyCharm
 .idea/

@@ -29,7 +29,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('start_batch', nargs=1, type=int)
         parser.add_argument('num_batches', nargs=1, type=int)
-        parser.add_argument('audio_folder', nargs=1, type=str)
 
     def extract_spectral_features(self, audio, sample_rate):
         rms = librosa.feature.rms(audio)
@@ -65,7 +64,7 @@ class Command(BaseCommand):
         spectral = []
 
         patches = []
-        audio_root = Path(options['audio_folder'][0])
+        audio_root = Path("browser/static/browser/audio")
         audio_root.mkdir(parents=True, exist_ok=True)
 
         # Check for Synth1B1 - make it if it doesn't exist
