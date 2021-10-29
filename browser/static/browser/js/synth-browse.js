@@ -11,6 +11,14 @@ class Data {
     }
 }
 
+class LocalData {
+
+    getData(data, callback) {
+        callback(synth_data);
+    }
+
+}
+
 // Audio Player Class
 class AudioPlayer {
     constructor() {
@@ -520,7 +528,8 @@ class SynthBrowser {
 
     constructor() {
         this.player = new AudioPlayer();
-        this.ajax = new Data();
+        //this.ajax = new Data();
+        this.ajax = new LocalData();
         this.visualizer = new Visualizer(this.player);
         this.featureNames = {};
 
