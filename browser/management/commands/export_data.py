@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 'spectral_rolloff': spectral[i].spectral_rolloff,
                 'zcr': spectral[i].zcr
             })
-            filenames.append(os.path.join("browser", patch.path[1:]))
+            filenames.append(os.path.join("/synth-explorer/browser", patch.path[1:]))
 
         data = {
             'features': features,
