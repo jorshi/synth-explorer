@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 import os
 from pathlib import Path
-import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +27,7 @@ SECRET_KEY = '#od&^#y2%ef)5nh56_%bjnmf+0v@!^o$t&u-*qiwk$4s&+85s)'
 DEBUG = True
 
 AVAILABLE_DATABASES = ["sqlite", "mysql", "postgres"]
-DATABASE = AVAILABLE_DATABASES[2]
+DATABASE = AVAILABLE_DATABASES[0]
 
 ALLOWED_HOSTS = []
 
@@ -152,4 +151,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Activate Django-Heroku
-django_heroku.settings(locals())
+# django_heroku.settings(locals())
