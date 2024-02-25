@@ -13,7 +13,8 @@ from evotorch.operators import TwoPointCrossOver, PolynomialMutation
 # from torchsynth.synth import Voice
 # from tqdm import tqdm
 # import librosa
-# import soundfile as sf
+import numpy as np
+from scipy.io import wavfile
 
 # import numpy as np
 # from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -31,7 +32,7 @@ from ohc.fitness.clap import CLAPSimilarity
 SAMPLE_RATE = 48000
 BLOCK_SIZE = 512
 
-# from browser.models import Synth, SynthPatch, UmapMFCC, SpectralFeatures, UmapSpectral
+from browser.models import Synth, SynthPatch, UmapMFCC, SpectralFeatures, UmapSpectral, TextFeatures
 
 
 class Command(BaseCommand):
@@ -39,7 +40,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('vst', nargs=1, type=str)
-        parser.add_argument('prompts', nargs="+", type=str)
+        #parser.add_argument('prompts', nargs="+", type=str)
 
     # def extract_spectral_features(self, audio, sample_rate):
     #     rms = librosa.feature.rms(audio)
@@ -75,8 +76,7 @@ class Command(BaseCommand):
         clap = CLAPSimilarity(sample_rate=SAMPLE_RATE)
 
         # Initialize the fitness function
-        text_target = options["prompts"]
-        print(text_target)
+        text_target = ["percussive", "metallic", "sharp", "bright"]
 
         fitness = FitnessFunction(vst, clap, text_target=text_target)
         problem = evotorch.Problem(
@@ -89,7 +89,7 @@ class Command(BaseCommand):
 
         ga = GeneticAlgorithm(
             problem,
-            popsize=256,
+            popsize=128,
             operators=[
                 TwoPointCrossOver(problem, tournament_size=4),
                 PolynomialMutation(problem),
@@ -97,28 +97,54 @@ class Command(BaseCommand):
             re_evaluate=False,
         )
 
-        print(vst.synth.get_name())
-
         _ = StdOutLogger(ga)  # Report the evolution's progress to standard output
-        # ga.run(2)  # Run the algorithm for 100 generations
 
-        # device = "cuda" if torch.cuda.is_available() else "cpu"
-        # voice = Voice().to(device)
-        # sample_rate = int(voice.sample_rate)
-        # print(sample_rate)
+        ga.run(10)
 
-        # batch_idx = options['start_batch'][0]
-        # num_batches = options['num_batches'][0]
+        audio_root = Path("browser/static/browser/audio")
+        audio_root.mkdir(parents=True, exist_ok=True)
 
-        # # Features
-        # mfccs = []
-        # spectral = []
+        try:
+            synth = Synth.objects.get(name="synth1B1")
+        except Synth.DoesNotExist:
+            synth = Synth(name="synth1B1")
+            synth.save()
 
-        # patches = []
-        # audio_root = Path("browser/static/browser/audio")
-        # audio_root.mkdir(parents=True, exist_ok=True)
+        patches = []
+        for i, solution in enumerate(ga.population):
+            audio = vst.render_now(solution.values.unsqueeze(0), 58, 1.0, 1.0)[0][0]
 
-        # # Check for Synth1B1 - make it if it doesn't exist
+            # Create a synth patch
+            name = f"dexed-{i}"
+            try:
+                new_patch = SynthPatch.objects.get(name=name, synth=synth)
+            except SynthPatch.DoesNotExist:
+                new_patch = SynthPatch(name=name, synth=synth)
+
+            # Save patch audio
+            path = os.path.join(audio_root, f"{name}.wav")
+
+            audio = audio / np.abs(audio).max()
+            wavfile.write(path, SAMPLE_RATE, audio.transpose())
+
+            new_patch.path = os.path.join(static("browser/audio"), f"{name}.wav")
+            new_patch.pitch = 58
+            new_patch.save()
+            patches.append(new_patch)
+
+            # Save text features
+            try:
+                text_features = TextFeatures.objects.get(patch=new_patch)
+            except TextFeatures.DoesNotExist:
+                text_features = TextFeatures(patch=new_patch)
+            
+            text_features.percussive = solution.evals[0]
+            text_features.metallic = solution.evals[1]
+            text_features.sharp = solution.evals[2]
+            text_features.bright = solution.evals[3]
+            text_features.save()
+
+        # Check for Synth1B1 - make it if it doesn't exist
         # try:
         #     synth = Synth.objects.get(name="synth1B1")
         # except Synth.DoesNotExist:

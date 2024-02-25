@@ -11,13 +11,13 @@ class Data {
     }
 }
 
-class LocalData {
+// class LocalData {
 
-    getData(data, callback) {
-        callback(synth_data);
-    }
+//     getData(data, callback) {
+//         callback(synth_data);
+//     }
 
-}
+// }
 
 // Audio Player Class
 class AudioPlayer {
@@ -53,8 +53,8 @@ class Visualizer {
         this.filenames = []
         this.features = []
         this.dimensions = {
-            x: "mfcc_dim1",
-            y: "mfcc_dim2",
+            x: "percussive",
+            y: "metallic",
             color: null
         }
 
@@ -529,7 +529,7 @@ class SynthBrowser {
     constructor() {
         this.player = new AudioPlayer();
         //this.ajax = new Data();
-        this.ajax = new LocalData();
+        this.ajax = new Data();
         this.visualizer = new Visualizer(this.player);
         this.featureNames = {};
 
@@ -645,7 +645,7 @@ $(document).ready(function() {
     // Synth Samples Drag
     let synthDrag = new BrowserDragItem("synth-drag", function() {
         numSamples = $('#add-num-samples').val();
-        return {synth: "Synth1B1", num_samples: numSamples};
+        return {synth: "Dexed", num_samples: numSamples};
     });
     let containerDrop = new BrowserDropArea(synthDrag, function(data) {
         window.synthBrowser.requestSamples(data);

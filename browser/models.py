@@ -35,3 +35,11 @@ class UmapMFCC(models.Model):
     patch = models.OneToOneField(SynthPatch, on_delete=models.CASCADE, primary_key=True)
     dim_1 = models.FloatField(blank=True, null=True)
     dim_2 = models.FloatField(blank=True, null=True)
+
+
+class TextFeatures(models.Model):
+    patch = models.OneToOneField(SynthPatch, on_delete=models.CASCADE, primary_key=True)
+    percussive = models.FloatField(blank=True, null=True)
+    metallic = models.FloatField(blank=True, null=True)
+    sharp = models.FloatField(blank=True, null=True)
+    bright = models.FloatField(blank=True, null=True)
